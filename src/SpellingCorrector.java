@@ -1,22 +1,35 @@
 import java.io.*;
-import java.util.*;
+        import java.util.*;
 
 
 class SpellingCorrector {
     public static void main(String[] args) {
 
+        String testcase = "testcase2";
+
         //read every line of vocab.txt
-        ArrayList <String> dictionary = readDictionary("testcase1");
+        ArrayList <String> dictionary = readDictionary(testcase);
 
         //read sentence.txt
-        ArrayList <String> sentence = readSentence("testcase1");
+        ArrayList <String> sentence = readSentence(testcase);
 
         //
-        int desiredLevenshteinDistance = readLevenshteinDistance("testcase1");
+        int desiredLevenshteinDistance = readLevenshteinDistance(testcase);
 
         //flag each word not in the dictionary
 
         //to store misspelled word en their correction
+        Map<String, ArrayList<String>> misspelledWordsCorrectionsMap = linearSpellingCorrector(dictionary, sentence, desiredLevenshteinDistance);
+
+        //print
+        printResults(misspelledWordsCorrectionsMap);
+
+        //write to text file
+        writeResultsToFile(misspelledWordsCorrectionsMap);
+
+    }
+
+    public static Map<String, ArrayList<String>> linearSpellingCorrector(ArrayList<String> dictionary, ArrayList<String> sentence, int desiredLevenshteinDistance){
         Map<String, ArrayList<String>> misspelledWordsCorrectionsMap = new LinkedHashMap<String, ArrayList<String>>();
 
 
@@ -36,11 +49,14 @@ class SpellingCorrector {
 
                 LevenshteinDistance levenshteinDistanceCalculator = new LevenshteinDistance();
 
+//                int levenTest = levenshteinDistanceCalculator.computeLevenshteinDistance("algoithms", "algorithms");
+//                System.out.println("Leven Test value: "+ levenTest);
+
                 for (int j=0; j<dictionary.size(); j++){
 
                     int lvshtnD = levenshteinDistanceCalculator.computeLevenshteinDistance(misspelledWord, dictionary.get(j));
 
-                    if (lvshtnD == desiredLevenshteinDistance){
+                    if (lvshtnD <= desiredLevenshteinDistance){
                         //add a possible correction
                         correctionsList.add(dictionary.get(j));
 //                      System.out.println("'"+misspelledWord + "' is close to '"+dictionary.get(j)+"'");
@@ -51,26 +67,7 @@ class SpellingCorrector {
             }
         }
 
-        //print
-        printResults(misspelledWordsCorrectionsMap);
-
-        //write to text file
-        writeResultsToFile(misspelledWordsCorrectionsMap);
-
-
-
-
-
-
-
-        //output to MisspelledWords.txt
-        //each line:
-        // misspelledWord1: correction1, correction2, correction3
-        //0 if none
-
-
-        //USING BK Trees
-
+        return misspelledWordsCorrectionsMap;
     }
 
     public static ArrayList <String> readDictionary(String testCaseStr){
@@ -87,7 +84,7 @@ class SpellingCorrector {
             while ((definedWordPerLine = dictionaryBufferedReader.readLine()) != null) {
 //                dictionary.append(definedWordPerLine);
 //                dictionary.append("\n");
-                  dictionaryArrayList.add(definedWordPerLine);
+                dictionaryArrayList.add(definedWordPerLine);
             }
             dictionaryFileReader.close();
 
@@ -115,6 +112,15 @@ class SpellingCorrector {
                 // break the line into individual words
                 // the String array contains each word of the current line
                 sentenceArrayList = new ArrayList<String>(Arrays.asList(sentenceLine.split(" +")));
+
+
+                //to lower case
+                ListIterator<String> iterator = sentenceArrayList.listIterator();
+                    while (iterator.hasNext())
+                    {
+                        iterator.set(iterator.next().toLowerCase());
+                    }
+
 
 //                sentenceStringBuffer.append(sentenceLine);
 //                sentenceStringBuffer.append("\n");
@@ -161,25 +167,21 @@ class SpellingCorrector {
         return levenshteinDistance;
     }
 
-    /**
-     * A Simple Program That Prints An Array In Java using Own logic.
-     */
-
-        private static String arrayListToString(ArrayList<String> anArray) {
-            String strArrayList ="";
-            for (int i = 0; i < anArray.size(); i++) {
-                if (i > 0) {
+    private static String arrayListToString(ArrayList<String> anArray) {
+        String strArrayList ="";
+        for (int i = 0; i < anArray.size(); i++) {
+            if (i > 0) {
 //                  add a comma space before the next correction
-                    strArrayList += ", ";
-                }
+                strArrayList += ", ";
+            }
 
 //              add the correction
-                strArrayList += anArray.get(i);
+            strArrayList += anArray.get(i);
 
 
-            }
-            return strArrayList;
         }
+        return strArrayList;
+    }
 
     public static void writeResultsToFile(Map<String, ArrayList<String>> resultMap) {
         PrintWriter writer = null;
@@ -191,13 +193,19 @@ class SpellingCorrector {
             e.printStackTrace();
         }
 
-        for (Map.Entry<String, ArrayList<String>> entry : resultMap.entrySet()) {
-            String mispelledWord = entry.getKey();
-            ArrayList<String> correctionList = entry.getValue();
-            writer.println(mispelledWord + ": " + arrayListToString(correctionList));
+        if (resultMap.isEmpty()){
+            writer.println("0");
+        }
+        else {
+            for (Map.Entry<String, ArrayList<String>> entry : resultMap.entrySet()) {
+                String mispelledWord = entry.getKey();
+                ArrayList<String> correctionList = entry.getValue();
+                writer.println(mispelledWord + ": " + arrayListToString(correctionList));
+            }
         }
         writer.close();
     }
+
     public static void printResults (Map<String, ArrayList<String>> resultMap) {
         for (Map.Entry<String, ArrayList<String>> entry : resultMap.entrySet()) {
             String mispelledWord = entry.getKey();
